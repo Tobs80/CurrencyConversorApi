@@ -48,18 +48,43 @@ class TestingWebApplicationTest {
         this.mockMvc.perform(get("/conversion/"))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
-                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency base-Currency_objective" ));
+                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency_Code_base-Currency_code_objective" ));
         this.mockMvc.perform(get("/conversion/home"))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
-                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency base-Currency_objective" ));
+                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency_Code_base-Currency_code_objective" ));
+    }
+
+
+    @Test
+    void test_no_data_at_selected_date_or_before() throws Exception {
+        this.mockMvc.perform(get("/conversion/20200101-EUR-USD"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("No data available for this date or before"));
     }
     @Test
-    void test_url_with_extra_parameters() throws Exception {
-        this.mockMvc.perform(get("/conversion/date-Currency1-Currency2-param4"))
+    void test_currency_codes_different_than_3_chars() throws Exception {
+        this.mockMvc.perform(get("/conversion/20230508-USD-EU"))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Invalid URI format. Expected /date(yyyymmdd)-Currency base-Currency_objective" ));
+                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency_Code_base-Currency_code_objective" ));
+        this.mockMvc.perform(get("/conversion/20230508-US-EUR"))
+                .andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(status().reason("Invalid URI format. Expected /date(yyyymmdd)-Currency_Code_base-Currency_code_objective" ));
+    }
+
+    @Test
+    void test_currency_code_not_found() throws Exception {
+        this.mockMvc.perform(get("/conversion/20230508-ECU-EUR"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("One of the currency codes was not found in database." ));
+        this.mockMvc.perform(get("/conversion/20230508-USD-EAR"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("One of the currency codes was not found in database." ));
     }
 
 
